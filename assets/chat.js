@@ -149,15 +149,6 @@ gateForm.addEventListener("submit", async (e) => {
     const msg = text.trim();
     if (!msg) return;
 
-    // render optimistic
-    renderMessage({
-      id: lastId + 1,
-      sender_type: "user",
-      sender_name: HN_CHAT.meName || "Me",
-      message: msg,
-      created_at: new Date().toLocaleString(),
-    });
-
     input.value = "";
 
     try {
@@ -169,8 +160,8 @@ gateForm.addEventListener("submit", async (e) => {
       if (data && data.id) {
         lastId = Math.max(lastId, parseInt(data.id, 10) || lastId);
       }
-      // fetch để sync
-      fetchMessages();
+      // fetch để sync (bỏ optimistic render vì gây lặp)
+      await fetchMessages();
     } catch (e) {
       // báo lỗi nhẹ
       const err = document.createElement("div");
