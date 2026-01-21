@@ -147,8 +147,9 @@
     $input.val('');
     try{
       const data = await post('hn_admin_send_message', { chat_id: activeChatId, message: msg });
-      // sync nhanh
-      lastId = Math.max(lastId, parseInt(data.id, 10) || lastId);
+      // Reset để fetch lại toàn bộ tin nhắn, không phải chỉ after_id
+      lastId = 0;
+      $body.empty();
       await fetchMessages();
       await refreshList();
     }catch(err){
