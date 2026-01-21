@@ -206,6 +206,32 @@ class HomeNest_Chat_Live {
         );
     }
 
+    public function admin_enqueue_assets() {
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'toplevel_page_homenest-chat-live') return;
+
+        wp_enqueue_style(
+            'homenest-chat-live-admin',
+            plugin_dir_url(__FILE__) . 'assets/admin.css',
+            [],
+            self::VERSION
+        );
+
+        wp_enqueue_script(
+            'homenest-chat-live-admin',
+            plugin_dir_url(__FILE__) . 'assets/admin.js',
+            ['jquery'],
+            self::VERSION,
+            true
+        );
+
+        wp_localize_script('homenest-chat-live-admin', 'HN_CHAT_ADMIN', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('hn_chat_admin_nonce'),
+            'pollMs'  => 2000,
+        ]);
+    }
+
     public function render_admin_page() {
         if (!current_user_can('manage_options')) wp_die('No permission');
 
