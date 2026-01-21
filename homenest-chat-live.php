@@ -41,6 +41,7 @@ class HomeNest_Chat_Live {
         add_action('wp_ajax_hn_admin_list_conversations', [$this, 'ajax_admin_list_conversations']);
         add_action('wp_ajax_hn_admin_fetch_messages', [$this, 'ajax_admin_fetch_messages']);
         add_action('wp_ajax_hn_admin_send_message', [$this, 'ajax_admin_send_message']);
+        add_action('wp_ajax_hn_admin_delete_conversation', [$this, 'ajax_admin_delete_conversation']);
 
 
 
@@ -253,6 +254,7 @@ class HomeNest_Chat_Live {
                 <div class="hn-admin-chat-title" id="hnAdminChatTitle">Chọn một cuộc chat</div>
                 <div class="hn-admin-chat-sub" id="hnAdminChatSub"></div>
             </div>
+            <button type="button" class="button button-danger" id="hnAdminDeleteBtn" style="display:none;" onclick="deleteChat()">Xóa</button>
             </div>
 
             <div class="hn-admin-chat-body" id="hnAdminChatBody"></div>
@@ -509,6 +511,28 @@ class HomeNest_Chat_Live {
         if (!$ok) wp_send_json_error(['message' => 'Insert failed'], 500);
 
         wp_send_json_success(['id' => (int)$wpdb->insert_id]);
+    }
+
+    public function ajax_admin_delete_conversation() {
+        $this->admin_guard();
+        check_ajax_referer('hn_chat_admin_nonce', 'nonce');
+
+        $chat_id = isset($_POST['chat_id']) ? sanitize_text_field($_POST['chat_id']) : '';
+
+        if ($chat_id === '') {
+            wp_send_json_error(['message' => 'Missing chat_id'], 400);
+        }
+
+        global $wpdb;
+        $table = $this->table_name();
+
+        $ok = $wpdb->delete($table, ['chat_id' => $chat_id], ['%s']);
+
+        if ($ok === false) {
+            wp_send_json_error(['message' => 'Delete failed'], 500);
+        }
+
+        wp_send_json_success(['deleted' => $ok]);
     }
 
 

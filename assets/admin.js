@@ -9,6 +9,7 @@
   const $input = $('#hnAdminChatInput');
   const $btn = $form.find('button');
   const $search = $('#hnAdminSearch');
+  const $deleteBtn = $('#hnAdminDeleteBtn');
 
   let convs = [];
   let activeChatId = '';
@@ -130,6 +131,7 @@
 
     $input.prop('disabled', false);
     $btn.prop('disabled', false);
+    $deleteBtn.show();
 
     renderList($search.val());
 
@@ -155,6 +157,28 @@
   });
 
   $search.on('input', () => renderList($search.val()));
+
+  // Delete chat
+  window.deleteChat = async function(){
+    if (!activeChatId) return;
+    if (!confirm('Bạn có chắc muốn xóa cuộc chat này?')) return;
+
+    try{
+      await post('hn_admin_delete_conversation', { chat_id: activeChatId });
+      activeChatId = '';
+      lastId = 0;
+      $body.empty();
+      $input.prop('disabled', true);
+      $btn.prop('disabled', true);
+      $deleteBtn.hide();
+      $title.text('Chọn một cuộc chat');
+      $sub.text('');
+      stopPolling();
+      await refreshList();
+    }catch(err){
+      alert(err.message || 'Delete failed');
+    }
+  };
 
   // init
   refreshList().catch(()=>{});
