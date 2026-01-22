@@ -240,6 +240,12 @@
   padding: 14px;
 }
 
+/* Fix: hidden phải luôn ẩn lead overlay */
+.hncl-lead[hidden]{
+  display: none !important;
+}
+
+
 .hncl-lead__card{
   width: 100%;
   background: #fff;
