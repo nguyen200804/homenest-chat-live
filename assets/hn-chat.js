@@ -9,9 +9,7 @@
     document.cookie = name + '=' + encodeURIComponent(value) + '; path=/; expires=' + d.toUTCString();
   }
 
-  function isEmail(v) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-  }
+  function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
   function isPhone(v) {
     const digits = v.replace(/[^\d+]/g, '');
     const onlyNums = digits.replace(/\D/g, '');
@@ -22,6 +20,7 @@
   if (!$root.length) return;
 
   const $fab = $root.find('.hn-chat__fab');
+  const $badge = $root.find('.hn-chat__badge');
   const $panel = $root.find('.hn-chat__panel');
   const $close = $root.find('.hn-chat__close');
 
@@ -34,20 +33,36 @@
   const $input = $root.find('.hn-chat__input');
   const $send = $root.find('.hn-chat__send');
 
+  const $file = $root.find('.hn-chat__file');
+
   let contact = getCookie(HNChat.cookie_contact || 'hn_chat_contact') || '';
   let afterId = 0;
   let pollTimer = null;
   let isOpen = false;
+  let unseenWhileClosed = 0;
+
+  function setBadge(n) {
+    if (n > 0) {
+      $badge.text(n > 99 ? '99+' : String(n)).show();
+    } else {
+      $badge.hide();
+    }
+  }
+
+  function escHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
 
   function appendMsg(m) {
-    const role = m.sender_role === 'admin' ? 'admin' : 'guest';
+    const role = (m.sender_role === 'admin' || m.sender_role === 'agent') ? 'admin' : 'guest';
     const $item = $('<div class="hn-chat__msg hn-chat__msg--' + role + '"></div>');
     const $bubble = $('<div class="hn-chat__bubble"></div>').html(m.message);
     const $time = $('<div class="hn-chat__time"></div>').text(m.created_at || '');
     $item.append($bubble).append($time);
     $msgs.append($item);
     $msgs.scrollTop($msgs[0].scrollHeight);
-    afterId = Math.max(afterId, parseInt(m.id, 10) || afterId);
+    const idNum = parseInt(m.id, 10) || 0;
+    if (idNum > afterId) afterId = idNum;
   }
 
   function showChatUI() {
@@ -55,25 +70,25 @@
     $msgs.show();
     $footer.show();
   }
-
   function showGateUI() {
     $gate.show();
     $msgs.hide();
     $footer.hide();
   }
 
+  function api(action, data) {
+    return $.post(HNChat.ajax_url, Object.assign({
+      action,
+      nonce: HNChat.nonce
+    }, data || {}));
+  }
+
   function saveContact(v) {
-    return $.post(HNChat.ajax_url, {
-      action: 'hn_chat_save_contact',
-      nonce: HNChat.nonce,
-      contact: v
-    });
+    return api('hn_chat_save_contact', { contact: v });
   }
 
   function sendMessage(text) {
-    return $.post(HNChat.ajax_url, {
-      action: 'hn_chat_send_message',
-      nonce: HNChat.nonce,
+    return api('hn_chat_send_message', {
       contact: contact,
       message: text
     });
@@ -81,17 +96,23 @@
 
   function fetchMessages() {
     if (!contact) return;
-    return $.post(HNChat.ajax_url, {
-      action: 'hn_chat_fetch_messages',
-      nonce: HNChat.nonce,
+    return api('hn_chat_fetch_messages', {
       contact: contact,
       after_id: afterId
     }).done(function (res) {
       if (!res || !res.ok) return;
       const list = (res.data && res.data.messages) ? res.data.messages : [];
-      if (list.length) {
-        list.forEach(appendMsg);
-      }
+      if (!list.length) return;
+
+      list.forEach(function (m) {
+        appendMsg(m);
+        // nếu panel đóng mà nhận tin admin/agent => badge
+        if (!isOpen && (m.sender_role === 'admin' || m.sender_role === 'agent')) {
+          unseenWhileClosed++;
+        }
+      });
+
+      if (!isOpen && unseenWhileClosed > 0) setBadge(unseenWhileClosed);
     });
   }
 
@@ -106,6 +127,8 @@
 
   function openPanel() {
     isOpen = true;
+    unseenWhileClosed = 0;
+    setBadge(0);
     $panel.show();
     if (contact) {
       showChatUI();
@@ -150,8 +173,9 @@
     const text = ($input.val() || '').trim();
     if (!text) return;
     $input.val('');
-    // append optimistic
-    appendMsg({ id: afterId + 1, sender_role: 'guest', message: $('<div/>').text(text).html(), created_at: '' });
+
+    // optimistic render (guest)
+    appendMsg({ id: afterId + 1, sender_role: 'guest', message: escHtml(text), created_at: '' });
 
     sendMessage(text).done(function (res) {
       if (!res || !res.ok) {
@@ -170,11 +194,68 @@
     }
   });
 
-  // Nếu đã có contact -> chuẩn bị UI (nhưng không auto-open)
+  function uploadFile(file) {
+    if (!file) return;
+    const max = (HNChat.max_upload_mb || 5) * 1024 * 1024;
+    if (file.size > max) {
+      alert('File quá lớn. Tối đa ' + (HNChat.max_upload_mb || 5) + 'MB.');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('action', 'hn_chat_upload');
+    fd.append('nonce', HNChat.nonce);
+    fd.append('file', file);
+
+    $input.prop('disabled', true);
+    $send.prop('disabled', true);
+
+    $.ajax({
+      url: HNChat.ajax_url,
+      type: 'POST',
+      data: fd,
+      processData: false,
+      contentType: false,
+    }).done(function (res) {
+      if (!res || !res.ok) {
+        alert((res && res.error) ? res.error : 'Upload thất bại.');
+        return;
+      }
+      const url = res.data.url;
+      const mime = res.data.mime || '';
+      let html = '';
+      if (mime.startsWith('image/')) {
+        html = `<a href="${url}" target="_blank" rel="noopener">🖼️ Ảnh</a><br><img src="${url}" alt="" style="max-width:180px;border-radius:10px;margin-top:6px;">`;
+      } else {
+        html = `<a href="${url}" target="_blank" rel="noopener">📎 Tệp đính kèm</a>`;
+      }
+      // gửi như message HTML
+      sendMessage(html).done(function () {
+        fetchMessages();
+      });
+    }).always(function () {
+      $input.prop('disabled', false);
+      $send.prop('disabled', false);
+      $file.val('');
+    });
+  }
+
+  $file.on('change', function () {
+    const f = this.files && this.files[0];
+    if (!contact) {
+      alert('Vui lòng nhập SĐT/Email trước.');
+      $file.val('');
+      return;
+    }
+    uploadFile(f);
+  });
+
+  // init
+  if (contact) showChatUI();
+  else showGateUI();
+
+  // background polling để hiện badge dù panel đóng (nhẹ)
   if (contact) {
-    showChatUI();
-  } else {
-    showGateUI();
+    setInterval(fetchMessages, Math.max(5000, HNChat.poll_ms || 3000));
   }
 
 })(jQuery);
