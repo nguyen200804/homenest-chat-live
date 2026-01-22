@@ -71,18 +71,24 @@
 
       const cls = (activeConvId === parseInt(c.id, 10)) ? 'hn-conv hn-conv--active' : 'hn-conv';
 
+      // Tìm đoạn $list.append trong hàm renderList và thay đổi nội dung bên trong:
       $list.append(
-        `<button class="${cls}" data-id="${c.id}" type="button">
-           <div class="hn-conv__row1">
-             <div class="hn-conv__contact">${statusDot}${escHtml(c.contact)}</div>
-             ${unread > 0 ? `<span class="hn-unread">${unread > 99 ? '99+' : unread}</span>` : ''}
-           </div>
-           <div class="hn-conv__row2">
-             <div class="hn-conv__meta">${escHtml(c.contact_type)} • ${escHtml(last)}</div>
-             ${meMark}
-           </div>
-           ${tagsHtml}
-         </button>`
+        `<div class="hn-conv-wrapper" style="position:relative;">
+          <button class="${cls}" data-id="${c.id}" type="button">
+            <div class="hn-conv__row1">
+              <div class="hn-conv__contact">${statusDot}${escHtml(c.contact)}</div>
+              ${unread > 0 ? `<span class="hn-unread">${unread > 99 ? '99+' : unread}</span>` : ''}
+            </div>
+            <div class="hn-conv__row2">
+              <div class="hn-conv__meta">${escHtml(c.contact_type)} • ${escHtml(last)}</div>
+              ${meMark}
+            </div>
+            ${tagsHtml}
+          </button>
+          <button class="hn-btnDeleteConv" data-id="${c.id}" 
+                  style="position:absolute; top:10px; right:10px; background:none; border:none; color:#e11d48; cursor:pointer;" 
+                  title="Xóa đoạn chat">✕</button>
+        </div>`
       );
     });
   }

@@ -46,6 +46,8 @@ class HomeNest_Live_Chat_Pro {
         add_action('wp_ajax_hn_chat_admin_list_agents', [$this, 'ajax_admin_list_agents']);
 
         add_action('wp_ajax_hn_chat_admin_upload', [$this, 'ajax_admin_upload']);
+
+        add_action('wp_ajax_hn_chat_admin_delete_conversation', [$this, 'ajax_admin_delete_conversation']);
     }
 
     private function tables() {
@@ -736,50 +738,72 @@ class HomeNest_Live_Chat_Pro {
     }
 
     public function ajax_admin_upload() {
-    $this->admin_check();
+        $this->admin_check();
 
-    if (empty($_FILES['file'])) $this->json_err('No file');
+        if (empty($_FILES['file'])) $this->json_err('No file');
 
-    // Rate limit upload (admin)
-    $uid = get_current_user_id();
-    if (!$this->rate_limit("admin_upload|$uid", 20, 300)) {
-        $this->json_err('Upload quá nhanh. Vui lòng thử lại sau.');
+        // Rate limit upload (admin)
+        $uid = get_current_user_id();
+        if (!$this->rate_limit("admin_upload|$uid", 20, 300)) {
+            $this->json_err('Upload quá nhanh. Vui lòng thử lại sau.');
+        }
+
+        $file = $_FILES['file'];
+
+        if (!empty($file['size']) && $file['size'] > 5 * 1024 * 1024) {
+            $this->json_err('File quá lớn (tối đa 5MB).');
+        }
+
+        $allowed = ['image/jpeg','image/png','image/webp','application/pdf'];
+        $type = $file['type'] ?? '';
+        if (!in_array($type, $allowed, true)) {
+            $this->json_err('Định dạng không hỗ trợ (jpg/png/webp/pdf).');
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $overrides = ['test_form' => false];
+        $uploaded = wp_handle_upload($file, $overrides);
+        if (isset($uploaded['error'])) $this->json_err($uploaded['error']);
+
+        $attachment = [
+            'post_mime_type' => $uploaded['type'],
+            'post_title'     => sanitize_file_name(basename($uploaded['file'])),
+            'post_content'   => '',
+            'post_status'    => 'inherit',
+        ];
+
+        $attach_id = wp_insert_attachment($attachment, $uploaded['file']);
+        $attach_data = wp_generate_attachment_metadata($attach_id, $uploaded['file']);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+
+        $url = wp_get_attachment_url($attach_id);
+        $this->json_ok(['attachment_id' => (int)$attach_id, 'url' => $url, 'mime' => $uploaded['type']]);
     }
 
-    $file = $_FILES['file'];
+    public function ajax_admin_delete_conversation() {
+        $this->admin_check();
 
-    if (!empty($file['size']) && $file['size'] > 5 * 1024 * 1024) {
-        $this->json_err('File quá lớn (tối đa 5MB).');
+        $conv_id = isset($_POST['conversation_id']) ? absint($_POST['conversation_id']) : 0;
+        if (!$conv_id) $this->json_err('Thiếu ID cuộc hội thoại.');
+
+        global $wpdb;
+        $t = $this->tables();
+
+        // Xóa tất cả tin nhắn thuộc cuộc hội thoại trước
+        $wpdb->delete($t['messages'], ['conversation_id' => $conv_id]);
+
+        // Xóa cuộc hội thoại
+        $result = $wpdb->delete($t['conversations'], ['id' => $conv_id]);
+
+        if ($result) {
+            $this->json_ok();
+        } else {
+            $this->json_err('Không thể xóa cuộc hội thoại.');
+        }
     }
-
-    $allowed = ['image/jpeg','image/png','image/webp','application/pdf'];
-    $type = $file['type'] ?? '';
-    if (!in_array($type, $allowed, true)) {
-        $this->json_err('Định dạng không hỗ trợ (jpg/png/webp/pdf).');
-    }
-
-    require_once ABSPATH . 'wp-admin/includes/file.php';
-    require_once ABSPATH . 'wp-admin/includes/media.php';
-    require_once ABSPATH . 'wp-admin/includes/image.php';
-
-    $overrides = ['test_form' => false];
-    $uploaded = wp_handle_upload($file, $overrides);
-    if (isset($uploaded['error'])) $this->json_err($uploaded['error']);
-
-    $attachment = [
-        'post_mime_type' => $uploaded['type'],
-        'post_title'     => sanitize_file_name(basename($uploaded['file'])),
-        'post_content'   => '',
-        'post_status'    => 'inherit',
-    ];
-
-    $attach_id = wp_insert_attachment($attachment, $uploaded['file']);
-    $attach_data = wp_generate_attachment_metadata($attach_id, $uploaded['file']);
-    wp_update_attachment_metadata($attach_id, $attach_data);
-
-    $url = wp_get_attachment_url($attach_id);
-    $this->json_ok(['attachment_id' => (int)$attach_id, 'url' => $url, 'mime' => $uploaded['type']]);
-}
 
 }
 
