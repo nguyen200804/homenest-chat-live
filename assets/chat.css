@@ -270,3 +270,6 @@
   font-size: 12px;
   opacity: .65;
 }
+
+.hncl-panel[aria-hidden="true"] { pointer-events: none; }
+.hncl-lead[hidden]{ display:none !important; }
