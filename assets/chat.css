@@ -1,0 +1,267 @@
+/* Root wrapper */
+.hncl{
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 99999;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* (1) Launcher */
+.hncl-launcher{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hncl-launcher__label{
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 999px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+  font-size: 14px;
+}
+
+.hncl-launcher__bubble{
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: #c92a2a;
+  box-shadow: 0 10px 24px rgba(0,0,0,.14);
+  display: grid;
+  place-items: center;
+}
+
+.hncl-launcher__icon{
+  width: 18px;
+  height: 18px;
+  display: block;
+  background: #fff;
+  clip-path: polygon(10% 15%, 90% 15%, 90% 70%, 55% 70%, 40% 85%, 40% 70%, 10% 70%);
+}
+
+/* Panel */
+.hncl-panel{
+  position: absolute;
+  right: 0;
+  bottom: 70px;
+  width: 360px;
+  max-width: calc(100vw - 30px);
+  transform: translateY(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: .18s ease;
+}
+
+.hncl-panel.is-open{
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hncl-panel__inner{
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0,0,0,.16);
+  border: 1px solid rgba(0,0,0,.10);
+  background: #fff;
+  position: relative;
+}
+
+/* Topbar */
+.hncl-topbar{
+  background: #fff;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.hncl-topbar__title{
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.hncl-topbar__close{
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(0,0,0,.06);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Screens */
+.hncl-screen{
+  min-height: 440px;
+  background: #fff;
+}
+
+/* (2) Welcome */
+.hncl-welcome{
+  background: linear-gradient(0deg, rgba(255,255,255,0.88), rgba(255,255,255,0.88)), #c92a2a;
+  padding: 18px 16px;
+  min-height: 440px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.hncl-welcome__title{
+  font-size: 28px;
+  font-weight: 800;
+  margin-top: 18px;
+}
+
+.hncl-welcome__sub{
+  opacity: .8;
+  font-size: 14px;
+}
+
+.hncl-note{
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: .55;
+}
+
+.hncl-btn{
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.hncl-btn--primary{
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.10);
+}
+
+/* (3) Chat */
+.hncl-messages{
+  height: 320px;
+  overflow: auto;
+  padding: 12px;
+  background: #f7f7f7;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hncl-composer{
+  display: grid;
+  grid-template-columns: 1fr 46px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(0,0,0,.08);
+  background: #fff;
+  align-items: center;
+}
+
+.hncl-input{
+  width: 100%;
+  border: 1px solid rgba(0,0,0,.14);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 14px;
+}
+
+.hncl-send{
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.12);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.hncl-send:disabled{ opacity: .6; cursor: not-allowed; }
+
+.hncl-send__icon{
+  font-size: 18px;
+}
+
+.hncl-status{
+  padding: 8px 12px 12px;
+  font-size: 12px;
+  opacity: .7;
+  background: #fff;
+}
+
+.hncl-msg{
+  max-width: 86%;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+
+.hncl-msg--me{
+  align-self: flex-end;
+  background: #c92a2a;
+  color: #fff;
+  border-color: rgba(0,0,0,.0);
+}
+
+.hncl-msg__meta{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  opacity: .75;
+  margin-bottom: 4px;
+}
+
+.hncl-msg__text{
+  font-size: 13px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* (4) Lead overlay */
+.hncl-lead{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.50);
+  display: grid;
+  place-items: end center;
+  padding: 14px;
+}
+
+.hncl-lead__card{
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid rgba(0,0,0,.10);
+}
+
+.hncl-lead__title{
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.hncl-lead__fields{
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hncl-lead__hint{
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: .65;
+}

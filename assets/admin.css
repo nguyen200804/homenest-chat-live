@@ -1,0 +1,124 @@
+.hncl-admin__title{ margin-bottom: 10px; }
+
+.hncl-wa{
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 0;
+  height: calc(100vh - 160px);
+  min-height: 560px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.hncl-wa__left{
+  border-right: 1px solid #dcdcde;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.hncl-wa__search{
+  padding: 10px;
+  border-bottom: 1px solid #dcdcde;
+}
+.hncl-wa__search input{
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 10px;
+}
+
+.hncl-wa__list{
+  overflow: auto;
+}
+
+.hncl-sess{
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f1;
+  cursor: pointer;
+}
+.hncl-sess:hover{ background: #f6f7f7; }
+.hncl-sess.is-active{ background: #e7f0ff; }
+
+.hncl-sess__top{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.hncl-sess__name{ font-weight: 700; }
+.hncl-sess__time{ opacity: .6; font-size: 12px; }
+
+.hncl-sess__sub{
+  opacity: .75;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hncl-wa__right{
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.hncl-wa__header{
+  padding: 12px 14px;
+  border-bottom: 1px solid #dcdcde;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hncl-wa__name{ font-weight: 800; font-size: 14px; }
+.hncl-wa__meta{ opacity: .7; font-size: 12px; margin-top: 2px; }
+
+.hncl-wa__messages{
+  overflow: auto;
+  padding: 14px;
+  background: #f6f7f7;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hncl-msg{
+  max-width: 72%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+.hncl-msg--admin{
+  align-self: flex-end;
+  background: #d1f0ff;
+  border-color: #b9e6ff;
+}
+.hncl-msg__meta{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  opacity: .65;
+  margin-bottom: 4px;
+}
+
+.hncl-wa__composer{
+  padding: 10px;
+  border-top: 1px solid #dcdcde;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.hncl-wa__composer textarea{
+  width: 100%;
+  resize: none;
+  min-height: 40px;
+  max-height: 140px;
+  padding: 10px 12px;
+  border: 1px solid #c3c4c7;
+  border-radius: 12px;
+  line-height: 1.4;
+}
