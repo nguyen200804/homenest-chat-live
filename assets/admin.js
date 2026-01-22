@@ -52,7 +52,7 @@
       })
       .forEach(c => {
         const active = c.chat_id === activeChatId ? 'active' : '';
-        const name = c.contact_any || c.chat_id;
+        const name = c.contact_any || c.chat_id; // Updated to prioritize contact_any
         const time = c.last_time || '';
         const prev = c.last_message || '';
 

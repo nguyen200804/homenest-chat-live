@@ -141,7 +141,12 @@ gateForm.addEventListener("submit", async (e) => {
         renderMessage(m);
       });
     } catch (e) {
-      // im lặng để tránh spam lỗi
+      console.error("Lỗi khi nhận tin nhắn:", e.message);
+      const err = document.createElement("div");
+      err.className = "hn-chat-error";
+      err.textContent = "Không thể nhận tin nhắn: " + e.message;
+      list.appendChild(err);
+      list.scrollTop = list.scrollHeight;
     }
   }
 
@@ -160,10 +165,9 @@ gateForm.addEventListener("submit", async (e) => {
       if (data && data.id) {
         lastId = Math.max(lastId, parseInt(data.id, 10) || lastId);
       }
-      // fetch để sync (bỏ optimistic render vì gây lặp)
       await fetchMessages();
     } catch (e) {
-      // báo lỗi nhẹ
+      console.error("Lỗi khi gửi tin nhắn:", e.message);
       const err = document.createElement("div");
       err.className = "hn-chat-error";
       err.textContent = "Gửi thất bại: " + e.message;

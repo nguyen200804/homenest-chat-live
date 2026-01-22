@@ -298,6 +298,32 @@ class HomeNest_Chat_Live {
         global $wpdb;
         $table = $this->table_name();
 
+        // Kiểm tra tính hợp lệ của chat_id
+        $chat_exists = $wpdb->get_var(
+            $wpdb->prepare("SELECT COUNT(*) FROM $table WHERE chat_id = %s", $chat_id)
+        );
+        if (!$chat_exists) {
+            wp_send_json_error(['message' => 'Chat ID không hợp lệ'], 400);
+        }
+
+        // Xử lý lỗi khi truy vấn cơ sở dữ liệu thất bại
+        if ($wpdb->last_error) {
+            error_log('Lỗi truy vấn cơ sở dữ liệu: ' . $wpdb->last_error);
+            wp_send_json_error(['message' => 'Lỗi hệ thống, vui lòng thử lại sau'], 500);
+        }
+
+        // Chống spam: Giới hạn số tin nhắn trong 10 giây
+        $last_message_time = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT created_at FROM $table WHERE sender_type = %s AND sender_id = %d ORDER BY created_at DESC LIMIT 1",
+                $sender_type,
+                $sender_id
+            )
+        );
+        if ($last_message_time && strtotime($last_message_time) > (time() - 10)) {
+            wp_send_json_error(['message' => 'Bạn gửi tin nhắn quá nhanh, vui lòng chờ'], 429);
+        }
+
         $ok = $wpdb->insert($table, [
             'chat_id'      => $chat_id,
             'sender_type'  => $sender_type,
