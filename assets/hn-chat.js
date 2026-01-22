@@ -44,6 +44,7 @@
 	let contact = getCookie(HNChat.cookie_contact || 'hn_chat_contact') || '';
 	let afterId = 0;
 	let pollTimer = null;
+	let bgPollTimer = null;
 	let isOpen = false;
 	let unseenWhileClosed = 0;
 
@@ -61,6 +62,24 @@
 
 	function appendMsg(m) {
 		const role = (m.sender_role === 'admin' || m.sender_role === 'agent') ? 'admin' : 'guest';
+		// dedupe: if last message has same role and same text, skip append
+		try {
+			const last = $msgs.children('.hn-chat__msg').last();
+			if (last && last.length) {
+				const lastRole = last.hasClass('hn-chat__msg--admin') ? 'admin' : 'guest';
+				const lastText = last.find('.hn-chat__bubble').text().trim();
+				const curText = $('<div>').html(m.message || '').text().trim();
+				if (lastRole === role && lastText && curText && lastText === curText) {
+					// already displayed, update afterId and return
+					const idNum2 = parseInt(m.id, 10) || 0;
+					if (idNum2 > afterId) afterId = idNum2;
+					return;
+				}
+			}
+		} catch (e) {
+			// ignore any error and continue
+		}
+
 		const $item = $('<div class="hn-chat__msg hn-chat__msg--' + role + '"></div>');
 		const $bubble = $('<div class="hn-chat__bubble"></div>').html(m.message);
 		const $time = $('<div class="hn-chat__time"></div>').text(m.created_at || '');
@@ -102,12 +121,15 @@
 
 	function fetchMessages() {
 		if (!contact) return;
+		console.debug('hn-chat: fetchMessages start', { contact: contact, afterId: afterId });
 		return api('hn_chat_fetch_messages', {
 			contact: contact,
 			after_id: afterId
 		}).done(function (res) {
+			console.debug('hn-chat: fetchMessages response', res);
 			if (!res || !res.ok) return;
 			const list = (res.data && res.data.messages) ? res.data.messages : [];
+			console.debug('hn-chat: messages received', list.length);
 			if (!list.length) return;
 
 			list.forEach(function (m) {
@@ -291,7 +313,7 @@
 
 	// background polling để hiện badge dù panel đóng (nhẹ)
 	if (contact) {
-		setInterval(fetchMessages, Math.max(5000, HNChat.poll_ms || 3000));
+		bgPollTimer = setInterval(fetchMessages, Math.max(5000, HNChat.poll_ms || 3000));
 	}
 
 })(jQuery);
