@@ -145,9 +145,19 @@
     if (!msg || !activeChatId) return;
 
     $input.val('');
+    
+    // Optimistic render: show message immediately
+    const optimisticMsg = {
+      id: 'temp-' + Date.now(),
+      sender_type: 'admin',
+      sender_name: 'Admin',
+      message: msg,
+      created_at: new Date().toLocaleString()
+    };
+    renderMsg(optimisticMsg);
+    
     try{
       const data = await post('hn_admin_send_message', { chat_id: activeChatId, message: msg });
-      // Fetch lại tin nhắn mới mà không clear, chỉ lấy sau lastId hiện tại
       if (data && data.id) {
         lastId = Math.max(lastId, parseInt(data.id, 10) || lastId);
       }
