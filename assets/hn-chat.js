@@ -27,6 +27,12 @@
 	const $gate = $root.find('.hn-chat__contactGate');
 	const $contactInput = $root.find('.hn-chat__contactInput');
 	const $contactBtn = $root.find('.hn-chat__contactBtn');
+	// container for duplicate warnings / actions
+	let $contactWarn = $root.find('.hn-chat__contactWarn');
+	if (!$contactWarn.length) {
+		$contactWarn = $('<div class="hn-chat__contactWarn" style="margin-top:8px;font-size:13px;color:#b33;display:none;"></div>');
+		$gate.append($contactWarn);
+	}
 
 	const $msgs = $root.find('.hn-chat__messages');
 	const $footer = $root.find('.hn-chat__footer');
@@ -160,13 +166,38 @@
 
 		// Thay vì check_contact (không tồn tại), hãy gọi thẳng saveContact
 		saveContact(v).done(function (res) {
-			if (res.ok) {
+			if (res && res.ok) {
 				contact = v;
 				// Lưu cookie để khách không phải nhập lại khi tải lại trang
-				setCookie(HNChat.cookie_contact || 'hn_chat_contact', v, 365); 
+				setCookie(HNChat.cookie_contact || 'hn_chat_contact', v, 365);
+				$contactWarn.hide().empty();
 				showChatUI();
 				startPolling();
 			} else {
+				// phát hiện trùng (backend có thể trả về res.data.exists hoặc thông điệp lỗi)
+				const isExists = (res && ((res.data && res.data.exists) || (typeof res.error === 'string' && /exist|tồn tại|đã tồn tại/i.test(res.error))));
+				if (isExists) {
+					// Nếu cấu hình bắt buộc unique thì cấm tiếp tục
+					if (HNChat && HNChat.force_unique) {
+						$contactWarn.show().text('Số điện thoại / Email này đã tồn tại. Vui lòng nhập SĐT/Email khác.');
+						$contactInput.val('').focus();
+						return;
+					}
+					// Hiển thị lựa chọn: Tiếp tục với tài khoản hiện tại hoặc Nhập khác
+					$contactWarn.html('Số điện thoại / Email này đã tồn tại. <button class="hn-chat__continueExisting" style="margin-left:8px">Tiếp tục</button> <button class="hn-chat__enterDifferent" style="margin-left:6px">Nhập số/Email khác</button>').show();
+					$contactWarn.find('.hn-chat__continueExisting').on('click', function () {
+						contact = v;
+						setCookie(HNChat.cookie_contact || 'hn_chat_contact', v, 365);
+						$contactWarn.hide().empty();
+						showChatUI();
+						startPolling();
+					});
+					$contactWarn.find('.hn-chat__enterDifferent').on('click', function () {
+						$contactWarn.hide().empty();
+						$contactInput.val('').focus();
+					});
+					return;
+				}
 				alert(res.error || 'Không thể lưu thông tin liên hệ.');
 			}
 		}).fail(function() {
