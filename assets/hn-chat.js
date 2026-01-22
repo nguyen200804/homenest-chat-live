@@ -153,19 +153,25 @@
   $contactBtn.on('click', function () {
     const v = ($contactInput.val() || '').trim();
     if (!v || (!isEmail(v) && !isPhone(v))) {
-      alert('Vui lòng nhập SĐT hoặc Email hợp lệ.');
+      alert('Vui lòng nhập email hoặc số điện thoại hợp lệ.');
       return;
     }
-    saveContact(v).done(function (res) {
-      if (!res || !res.ok) {
-        alert((res && res.error) ? res.error : 'Lỗi lưu thông tin.');
-        return;
+
+    // Kiểm tra thông tin liên hệ trùng khớp
+    api('hn_chat_check_contact', { contact: v }).done(function (res) {
+      if (res.ok && res.data.exists) {
+        alert('Thông tin liên hệ đã tồn tại. Vui lòng nhập thông tin khác.');
+      } else {
+        saveContact(v).done(function (res) {
+          if (res.ok) {
+            contact = v;
+            showChatUI();
+            startPolling();
+          } else {
+            alert(res.error || 'Không thể lưu thông tin liên hệ.');
+          }
+        });
       }
-      contact = v;
-      setCookie(HNChat.cookie_contact || 'hn_chat_contact', v, 365);
-      showChatUI();
-      fetchMessages();
-      startPolling();
     });
   });
 
