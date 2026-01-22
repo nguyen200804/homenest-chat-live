@@ -346,6 +346,21 @@
     adminUpload(f);
   });
 
+  // Thêm sự kiện xóa đoạn chat
+  $wrap.on('click', '.hn-btnDeleteConv', function () {
+    const convId = $(this).data('id');
+    if (!convId || !confirm('Bạn có chắc chắn muốn xóa đoạn chat này?')) return;
+
+    api('hn_chat_admin_delete_conversation', { conversation_id: convId }).done(res => {
+      if (res.ok) {
+        alert('Đoạn chat đã được xóa.');
+        loadList();
+      } else {
+        alert(res.error || 'Không thể xóa đoạn chat.');
+      }
+    });
+  });
+
   // init
   enableRight(false);
   loadAgents().always(loadList);
